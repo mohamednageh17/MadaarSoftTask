@@ -6,4 +6,6 @@ data class UserListState(
     val users: List<User> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val userToDelete: User? = null,
+    val showDeleteDialog: Boolean = false,
 )
