@@ -54,7 +54,7 @@ fun InputScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Add User") })
+            TopAppBar(title = { Text(if (state.isEditMode) "Edit User" else "Add User") })
         }
     ) { innerPadding ->
         Box(
@@ -149,7 +149,11 @@ fun InputScreen(
                 }
 
                 MadaarButton(
-                    text = if (state.isLoading) "Saving…" else "Save",
+                    text = when {
+                        state.isLoading -> "Saving…"
+                        state.isEditMode -> "Save Changes"
+                        else -> "Save"
+                    },
                     onClick = { viewModel.onIntent(InputIntent.SubmitClicked) },
                     enabled = !state.isLoading,
                 )

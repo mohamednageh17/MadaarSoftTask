@@ -2,6 +2,7 @@ package com.madaarsoft.app.presentation.userlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.madaarsoft.domain.usecase.DeleteUserUseCase
 import com.madaarsoft.domain.usecase.GetUsersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -16,6 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class UserListViewModel @Inject constructor(
     private val getUsers: GetUsersUseCase,
+    private val deleteUser: DeleteUserUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserListState())
@@ -31,6 +33,14 @@ class UserListViewModel @Inject constructor(
         when (intent) {
             UserListIntent.LoadUsers,
             UserListIntent.RetryClicked -> loadUsers()
+            is UserListIntent.OnDeleteUserClicked -> _state.update {
+                it.copy(userToDelete = intent.user, showDeleteDialog = true)
+            }
+
+            UserListIntent.OnConfirmDelete -> confirmDelete()
+            UserListIntent.OnDismissDeleteDialog -> _state.update {
+                it.copy(userToDelete = null, showDeleteDialog = false)
+            }
         }
     }
 
@@ -48,6 +58,18 @@ class UserListViewModel @Inject constructor(
                     }
                 }
                 .collect { users -> _state.update { it.copy(users = users, isLoading = false) } }
+        }
+    }
+
+    private fun confirmDelete() {
+        val user = _state.value.userToDelete ?: return
+        _state.update { it.copy(showDeleteDialog = false, userToDelete = null) }
+        viewModelScope.launch {
+            try {
+                deleteUser(user)
+            } catch (e: Exception) {
+                _state.update { it.copy(errorMessage = "Failed to delete user. Please try again.") }
+            }
         }
     }
 }

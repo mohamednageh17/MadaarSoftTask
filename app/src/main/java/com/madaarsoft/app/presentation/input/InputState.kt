@@ -12,4 +12,6 @@ data class InputState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val isSubmitted: Boolean = false,
+    val isEditMode: Boolean = false,
+    val userId: Int? = null,
 )

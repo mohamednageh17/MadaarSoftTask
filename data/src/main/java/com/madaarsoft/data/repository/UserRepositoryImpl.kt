@@ -3,6 +3,7 @@ package com.madaarsoft.data.repository
 import com.madaarsoft.data.local.UserDao
 import com.madaarsoft.data.local.UserEntity
 import com.madaarsoft.data.local.toDomain
+import com.madaarsoft.data.local.toEntity
 import com.madaarsoft.domain.model.User
 import com.madaarsoft.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
@@ -18,9 +19,20 @@ class UserRepositoryImpl @Inject constructor(
     override fun getUsers(): Flow<List<User>> =
         userDao.getAllUsers().map { entities -> entities.map { it.toDomain() } }
 
+    override suspend fun getUserById(id: Int): User? =
+        userDao.getUserById(id)?.toDomain()
+
     override suspend fun addUser(name: String, age: Int, jobTitle: String, gender: String): User {
         val entity = UserEntity(name = name, age = age, jobTitle = jobTitle, gender = gender)
         userDao.insertUser(entity)
         return entity.toDomain()
+    }
+
+    override suspend fun updateUser(user: User) {
+        userDao.updateUser(user.toEntity())
+    }
+
+    override suspend fun deleteUser(user: User) {
+        userDao.deleteUser(user.toEntity())
     }
 }
