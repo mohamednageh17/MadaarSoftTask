@@ -10,6 +10,6 @@ interface UserDao {
     @Insert
     suspend fun insertUser(user: UserEntity)
 
-    @Query("SELECT * FROM users")
+    @Query("SELECT * FROM users ORDER BY id DESC")
     fun getAllUsers(): Flow<List<UserEntity>>
 }
