@@ -1,8 +1,8 @@
 # Madaar Soft — Android Task
 
 A multi-module Android application built with Jetpack Compose, MVI architecture, Room database, and
-Hilt dependency injection. The app allows users to add and view a list of people with their personal
-details.
+Hilt dependency injection. The app allows users to add, edit, delete, and view a list of people
+with their personal details.
 
 ---
 
@@ -31,7 +31,7 @@ madaar_soft/
 │   └── presentation/
 │       ├── navigation/         # NavHost and route definitions
 │       ├── userlist/           # User list screen (MVI)
-│       └── input/              # Add user screen (MVI)
+│       └── input/              # Add / Edit user screen (MVI)
 │
 ├── domain/                     # Business logic — models, repository interfaces, use cases
 │   ├── model/
@@ -40,7 +40,10 @@ madaar_soft/
 │   │   └── UserRepository.kt
 │   └── usecase/
 │       ├── GetUsersUseCase.kt
-│       └── AddUserUseCase.kt
+│       ├── GetUserByIdUseCase.kt
+│       ├── AddUserUseCase.kt
+│       ├── UpdateUserUseCase.kt
+│       └── DeleteUserUseCase.kt
 │
 ├── data/                       # Data layer — Room database, DAOs, repository implementations
 │   ├── local/
@@ -120,17 +123,29 @@ User Interaction → Intent → ViewModel → State Update → UI Re-composition
 ```
 
 - **Intent** — a sealed class representing all possible user actions (e.g. `SubmitClicked`,
-  `NameChanged`).
+  `OnDeleteUserClicked`).
 - **State** — a single immutable data class representing the full UI state at any point in time.
 - **ViewModel** — receives intents, applies business logic, and emits a new state via `StateFlow`.
 
-Example for the Input screen:
+Example — delete flow:
+
+```
+UserListIntent.OnDeleteUserClicked(user)
+    → set userToDelete + showDeleteDialog = true
+    → user confirms dialog → OnConfirmDelete
+    → DeleteUserUseCase(user) called
+    → Room emits updated list → UI re-renders automatically
+```
+
+Example — edit/add flow:
 
 ```
 InputIntent.SubmitClicked
     → validate fields
     → if invalid: emit field-level errors in InputState
-    → if valid: call AddUserUseCase → emit isSubmitted = true
+    → if valid + isEditMode: call UpdateUserUseCase
+    → if valid + add mode: call AddUserUseCase
+    → emit isSubmitted = true → navigate back
 ```
 
 ---
@@ -147,8 +162,8 @@ Room DB (Flow<List<UserEntity>>)
     → UserListScreen                         [renders list]
 ```
 
-Flow is used **end-to-end** from the DAO up to the ViewModel. Any insert into the database
-automatically triggers a fresh emission, keeping the UI in sync with no manual refresh needed.
+Flow is used **end-to-end** from the DAO up to the ViewModel. Any insert, update, or delete
+automatically triggers a fresh emission — no manual refresh needed.
 
 ---
 
@@ -159,12 +174,23 @@ automatically triggers a fresh emission, keeping the UI in sync with no manual r
 - Displays all saved users from the local database.
 - Shows a loading spinner while the first emission is pending.
 - Shows an error message with a retry button if collection fails.
-- Navigates to the Input screen via a FAB or button.
+- Each user card has two icon buttons:
+    - **Edit** → navigates to the Input screen pre-filled with the user's data.
+    - **Delete** → shows a confirmation dialog before deleting.
+- Delete confirmation dialog:
+    - Title: "Delete User"
+    - Message: "Are you sure you want to delete {name}?"
+    - Buttons: Cancel / Delete
+- Navigates to the Add User screen via the FAB (+).
 
-### Input Screen (Add User)
+### Input Screen (Add / Edit User)
 
+- **Add mode** (default): empty form, top bar shows "Add User", button shows "Save".
+- **Edit mode** (when opened via the edit icon): form pre-filled with selected user's data, top bar
+  shows "Edit User", button shows "Save Changes".
 - Form fields: Name, Age, Job Title, Gender (dropdown).
 - Validates all fields on submit — shows inline error messages under each field.
+- Field errors clear automatically as the user starts typing.
 - Shows a `CircularProgressIndicator` overlay while saving.
 - On success, navigates back to the User List.
 - On failure, shows a general error message below the form.
@@ -178,8 +204,11 @@ Room is configured in the `data` module with `exportSchema = false`.
 ```
 AppDatabase  (RoomDatabase)
     └── UserDao
-            ├── insertUser(UserEntity)          [suspend]
-            └── getAllUsers(): Flow<List<UserEntity>>
+            ├── insertUser(UserEntity)              [suspend]
+            ├── updateUser(UserEntity)              [suspend — @Update]
+            ├── deleteUser(UserEntity)              [suspend — @Delete]
+            ├── getAllUsers(): Flow<List<UserEntity>>
+            └── getUserById(id: Int): UserEntity?   [suspend]
 ```
 
 **UserEntity** mirrors the domain `User` model with an auto-generated `@PrimaryKey`.
@@ -206,8 +235,9 @@ DataModule
 └── @Binds     UserRepository    (bound to UserRepositoryImpl)
 ```
 
-The `app` module receives `GetUsersUseCase` and `AddUserUseCase` via constructor injection into
-`@HiltViewModel` classes.
+Use cases are injected directly into `@HiltViewModel` classes via constructor injection. The
+`InputViewModel` also receives a `SavedStateHandle` to read the optional `userId` navigation
+argument for edit mode.
 
 ---
 
@@ -225,6 +255,7 @@ Validation lives entirely inside `InputViewModel` — no separate validator clas
 - Validation runs on `SubmitClicked` before any repository call.
 - Each field error is stored in `InputState` and displayed via `isError` + `supportingText` on
   `OutlinedTextField`.
+- Field errors are cleared individually as the user edits each field.
 - All field errors are cleared before a valid save attempt begins.
 
 ---
