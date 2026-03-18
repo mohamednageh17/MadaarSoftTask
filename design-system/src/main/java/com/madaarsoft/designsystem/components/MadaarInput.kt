@@ -15,6 +15,8 @@ fun MadaarInput(
     readOnly: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: @Composable (() -> Unit)? = null,
+    isError: Boolean = false,
+    supportingText: @Composable (() -> Unit)? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -24,6 +26,8 @@ fun MadaarInput(
         readOnly = readOnly,
         keyboardOptions = keyboardOptions,
         trailingIcon = trailingIcon,
+        isError = isError,
+        supportingText = supportingText,
         modifier = modifier,
     )
 }

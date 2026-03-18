@@ -31,20 +31,58 @@ class InputViewModel @Inject constructor(
 
     private fun submitUser() {
         val current = _state.value
-        if (current.name.isBlank()) return
+        if (!validate(current)) return
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, errorMessage = null) }
+            _state.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    nameError = null,
+                    ageError = null,
+                    jobTitleError = null,
+                    genderError = null,
+                )
+            }
             try {
                 addUser(
                     name = current.name,
-                    age = current.age.toIntOrNull() ?: 0,
+                    age = current.age.toInt(),
                     jobTitle = current.jobTitle,
                     gender = current.gender,
                 )
-                _state.update { it.copy(isLoading = false) }
+                _state.update { it.copy(isLoading = false, isSubmitted = true) }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, errorMessage = e.message) }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Failed to save user. Please try again."
+                    )
+                }
             }
         }
+    }
+
+    private fun validate(current: InputState): Boolean {
+        val nameError = if (current.name.isBlank()) "Name is required" else null
+        val ageError = when {
+            current.age.isBlank() -> "Age is required"
+            current.age.toIntOrNull() == null || current.age.toInt() <= 0 -> "Must be a positive number"
+            else -> null
+        }
+        val jobTitleError = if (current.jobTitle.isBlank()) "Job title is required" else null
+        val genderError = if (current.gender.isBlank()) "Gender is required" else null
+
+        val hasErrors = listOf(nameError, ageError, jobTitleError, genderError).any { it != null }
+        if (hasErrors) {
+            _state.update {
+                it.copy(
+                    nameError = nameError,
+                    ageError = ageError,
+                    jobTitleError = jobTitleError,
+                    genderError = genderError,
+                )
+            }
+        }
+        return !hasErrors
     }
 }
