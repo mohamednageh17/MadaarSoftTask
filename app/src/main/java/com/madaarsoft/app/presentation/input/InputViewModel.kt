@@ -30,8 +30,21 @@ class InputViewModel @Inject constructor(
     }
 
     private fun submitUser() {
+        val current = _state.value
+        if (current.name.isBlank()) return
         viewModelScope.launch {
-            // TODO: implement submission logic
+            _state.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                addUser(
+                    name = current.name,
+                    age = current.age.toIntOrNull() ?: 0,
+                    jobTitle = current.jobTitle,
+                    gender = current.gender,
+                )
+                _state.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, errorMessage = e.message) }
+            }
         }
     }
 }
