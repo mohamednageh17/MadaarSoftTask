@@ -21,4 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "MadaarSoftTask"
 include(":app")
+include(":domain")
+include(":data")
+include(":design-system")
  
