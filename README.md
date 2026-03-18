@@ -1,4 +1,9 @@
+
 # Madaar Soft — Android Task
+
+https://github.com/user-attachments/assets/bceeb272-fb87-4fef-a52d-f5a80cdaf561
+
+
 
 A multi-module Android application built with Jetpack Compose, MVI architecture, Room database, and
 Hilt dependency injection. The app allows users to add, edit, delete, and view a list of people
