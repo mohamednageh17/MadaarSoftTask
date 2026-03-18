@@ -1,15 +1,39 @@
+# ── Gradle ────────────────────────────────────────────────────────────────────
+.gradle/
+build/
+**/build/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
+gradle.properties.local
+
+# ── Android ───────────────────────────────────────────────────────────────────
+local.properties
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+*.apk
+*.aab
+*.ap_
+
+# ── IntelliJ / Android Studio ─────────────────────────────────────────────────
+# Keep: .idea/.gitignore, .idea/.name, .idea/vcs.xml, .idea/runConfigurations.xml
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/misc.xml
+.idea/compiler.xml
+.idea/gradle.xml
+.idea/kotlinc.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/deviceManager.xml
+.idea/deploymentTargetSelector.xml
+.idea/AndroidProjectSystem.xml
+.idea/appInsightsSettings.xml
+.idea/migrations.xml
+.idea/copilot.data.migration.ask2agent.xml
+*.idea/shelf/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
